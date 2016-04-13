@@ -1,5 +1,5 @@
-//assume that pin 32 is receiving PWM input
-#define CHANNEL_1_PIN 32
+//assume that pin 2 is receiving PWM input
+#define CHANNEL_1_PIN 2
 
 //micros when the pin goes HIGH
 volatile unsigned long timer_start;
@@ -15,7 +15,7 @@ volatile int last_interrupt_time;
 void setup()
 {
   timer_start = 0;
-  attachInterrupt(CHANNEL_1_PIN, calcSignal, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(CHANNEL_1_PIN), calcSignal, CHANGE);
   Serial.begin(115200);
 }
 void loop()

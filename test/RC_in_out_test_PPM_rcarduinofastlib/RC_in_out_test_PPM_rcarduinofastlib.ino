@@ -33,6 +33,7 @@ volatile uint32_t ulCounter = 0;
 
 void setup()
 {
+
   Serial.begin(115200);
   //ESC Output
   // attach servo objects, these will generate the correct
@@ -51,12 +52,16 @@ void setup()
 
   //start PPM reading
   CRCArduinoPPMChannels::begin();
+
+
 }
 
 void loop()
 {
   // Pass the signals straight through 
   uint16_t length_FirstPulse = CRCArduinoPPMChannels::getChannel(ESC_1_OUT_index); //get signal out of PPM, number = index of signal
+  Serial.println("First pulse: "+length_FirstPulse);
+
   
   if(length_FirstPulse)
   {
