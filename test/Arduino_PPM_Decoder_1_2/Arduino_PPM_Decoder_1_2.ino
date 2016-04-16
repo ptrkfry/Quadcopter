@@ -17,7 +17,7 @@ This sketch decodes PPM signals from an RC receiver. Input should be in the form
 
 
 const int NumberOfChannels = 6;          // Change to match number of channels
-const byte InputPin = 2;                // Pin associated with interrupt 2 on Arduino Mega2560
+const byte InputPin = 2;                // interrupt pin
 const int FrameSpace = 8000;   // 8 ms
 
 
@@ -52,7 +52,7 @@ void loop()
 
 
 
-//Stores the length of the spike in Spike_Length. Framespace length in stored in SpikeLength[0]
+//Stores the length of the spike in Spike_Length. Framespace length is stored in SpikeLength[0]
 void Spike()
 {
   Current_Time = micros();
