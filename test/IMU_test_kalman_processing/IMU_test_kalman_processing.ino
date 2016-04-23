@@ -9,40 +9,48 @@ float AccelAngleX,AccelAngleY,AccelAngleZ; //angles measured using accelerometer
 float KalmanAngleX=0, gyroXBias=0, Xp00=90, Xp01=0, Xp10=0, Xp11=90; //angle around X-axis
 float KalmanAngleY=0, gyroYBias=0, Yp00=90, Yp01=0, Yp10=0, Yp11=90; //angle around Y-axis
 float KalmanAngleZ=0, gyroZBias=0, Zp00=90, Zp01=0, Zp10=0, Zp11=90; //angle around Z-axis
-float Q_gyroBias=0.001; 
-float Q_AccelAngle=0.003;
+//float Q_gyroBias=0.001; 
+//float Q_AccelAngle=0.003;
+//float R=0.03;
+float Q_gyroBias=0.005; 
+float Q_AccelAngle=0.015;
 float R=0.03;
-float deltaT=0.02; //noch anpassen an tatsächliche step Breite
+//float deltaT=0.02; //noch anpassen an tatsächliche step Breite
 
 long lastTime=0;
-long Timee=0;
+//long timeLastPrint=0;
 
 void setup(){
   setupMPU6050();
   Serial.begin(115200);
+  lastTime=micros();
+//  timeLastPrint=micros();
 }
 
 void loop()
 {
-  getAccelAndGyro(); //get values from registers of MPU6050 and convert Accelerations to m/s^2 and then to angles
-  kalmanUpdate(KalmanAngleX, gyroXBias, Xp00, Xp01, Xp10, Xp11, AccelAngleX, GyX); //update angle around x-axis
-  kalmanUpdate(KalmanAngleY, gyroYBias, Yp00, Yp01, Yp10, Yp11, AccelAngleY, GyY); //update angle around x-axis
-  kalmanUpdate(KalmanAngleZ, gyroZBias, Zp00, Zp01, Zp10, Zp11, AccelAngleZ, GyZ); //update angle around x-axis
 
-  //check time of step
-  Serial.print("Time for step: ");
-  Serial.print(micros()-Timee);
-  Serial.print("\n");
-  Timee=micros();
-    
-  if((micros()-lastTime) > 200000)
-  {
-    outputValues();
-    lastTime=micros();
-  }
+  getAccelAndGyro(); //get values from registers of MPU6050 and convert Accelerations to m/s^2 and then to angles
+
+  float delt=(micros()-lastTime)/1000000.0;
+  lastTime=micros();
+  //Serial.println(delt,6);
+  
+  kalmanUpdate(KalmanAngleX, gyroXBias, Xp00, Xp01, Xp10, Xp11, AccelAngleX, GyX, delt); //update angle around x-axis
+  kalmanUpdate(KalmanAngleY, gyroYBias, Yp00, Yp01, Yp10, Yp11, AccelAngleY, GyY, delt); //update angle around y-axis
+  kalmanUpdate(KalmanAngleZ, gyroZBias, Zp00, Zp01, Zp10, Zp11, AccelAngleZ, GyZ, delt); //update angle around z-axis
+
+//  if(micros()-timeLastPrint>=20000)//limit serial output to 50Hz
+//  {
+    Serial.println("start");
+    Serial.println(KalmanAngleX);
+    Serial.println(KalmanAngleY);
+    Serial.println(KalmanAngleZ);
+//    timeLastPrint=micros();
+//  }
 }
 
-void kalmanUpdate(float &KalmanAngle, float &gyroBias, float &p00, float &p01, float &p10, float &p11, float AngleFromAccel, float rateFromGyro) //pass values as references so that we only need one kalmanUpdate function for all angles (else we wouldnt know which global variables to update)
+void kalmanUpdate(float &KalmanAngle, float &gyroBias, float &p00, float &p01, float &p10, float &p11, float AngleFromAccel, float rateFromGyro, float deltaT) //pass values as references so that we only need one kalmanUpdate function for all angles (else we wouldnt know which global variables to update)
 {
   //Step 1: Update state with system model (state is angle to be estimated and bias of gyro)
   float priorAngle=KalmanAngle+(rateFromGyro-gyroBias)*deltaT;
@@ -68,16 +76,6 @@ void kalmanUpdate(float &KalmanAngle, float &gyroBias, float &p00, float &p01, f
   p01=p01Prior-p01Prior*K0;
   p10=p10Prior-p00Prior*K1;
   p11=p11Prior-p01Prior*K1;
-}
-
-void outputValues()
-{
-  Serial.print(" | AccelAngleX = "); Serial.print(AccelAngleX); //roll
-  Serial.print(" | AccelAngleY = "); Serial.print(AccelAngleY); //pitch
-  Serial.print(" | AccelAngleZ = "); Serial.print(AccelAngleZ); //yaw
-  Serial.print(" | KalmanAngleX = "); Serial.print(KalmanAngleX); //roll
-  Serial.print(" | KalmanAngleY = "); Serial.print(KalmanAngleY); //pitch
-  Serial.print(" | KalmanAngleZ = "); Serial.println(KalmanAngleZ); //yaw
 }
 
 void getAccelAndGyro()

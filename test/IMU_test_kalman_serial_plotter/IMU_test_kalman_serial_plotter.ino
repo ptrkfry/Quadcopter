@@ -3,6 +3,7 @@
 const int MPU=0x68;  // I2C address of the MPU-6050
 
 float GyX,GyY,GyZ; //rates measured using Gyro
+float gyroAngleX;
 float AccelAngleX,AccelAngleY,AccelAngleZ; //angles measured using accelerometer
 
 //Kalman variables
@@ -15,11 +16,16 @@ float R=0.03;
 float deltaT=0.02; //noch anpassen an tatsächliche step Breite
 
 long lastTime=0;
-long Timee=0;
 
 void setup(){
   setupMPU6050();
   Serial.begin(115200);
+  //Serial.println("Initializing gyro angle..");
+  delay(2000);
+  getAccelAndGyro();
+  gyroAngleX=AccelAngleX;  
+  //Serial.println("Done!");
+  lastTime=micros();
 }
 
 void loop()
@@ -28,18 +34,21 @@ void loop()
   kalmanUpdate(KalmanAngleX, gyroXBias, Xp00, Xp01, Xp10, Xp11, AccelAngleX, GyX); //update angle around x-axis
   kalmanUpdate(KalmanAngleY, gyroYBias, Yp00, Yp01, Yp10, Yp11, AccelAngleY, GyY); //update angle around x-axis
   kalmanUpdate(KalmanAngleZ, gyroZBias, Zp00, Zp01, Zp10, Zp11, AccelAngleZ, GyZ); //update angle around x-axis
+  float delta=(micros()-lastTime)/1000000.0; //step in seconds
+  lastTime=micros();
+  gyroAngleX=gyroAngleX+GyX*delta;
 
-  //check time of step
-  Serial.print("Time for step: ");
-  Serial.print(micros()-Timee);
-  Serial.print("\n");
-  Timee=micros();
-    
-  if((micros()-lastTime) > 200000)
-  {
-    outputValues();
-    lastTime=micros();
-  }
+//  //check time of step
+//  Serial.print("Time for step: ");
+//  Serial.print(delta);
+//  Serial.print("\n");
+
+  //outputValues();
+//  Serial.print(AccelAngleX);
+//  Serial.print(",");
+//  Serial.println(gyroAngleX);
+//  Serial.print(" ");
+  Serial.println(KalmanAngleZ);
 }
 
 void kalmanUpdate(float &KalmanAngle, float &gyroBias, float &p00, float &p01, float &p10, float &p11, float AngleFromAccel, float rateFromGyro) //pass values as references so that we only need one kalmanUpdate function for all angles (else we wouldnt know which global variables to update)
