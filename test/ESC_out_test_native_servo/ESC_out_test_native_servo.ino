@@ -20,7 +20,7 @@ void loop()
   while(Serial.available())
   {
     text=Serial.readString();
-    value=text.toInt(); // =0 if string is not a number
+    value=text.toInt(); // = 0 if string is not a number
     Serial.print("received: ");
     Serial.print(value);
     Serial.print("\n");
